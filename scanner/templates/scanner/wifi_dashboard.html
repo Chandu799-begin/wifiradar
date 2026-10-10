@@ -1,0 +1,223 @@
+{% extends 'scanner/base.html' %}
+{% load static %}
+{% block title %}Saved Wi-Fi · Wi-Fi Radar Pro{% endblock %}
+{% block page_title %}Saved Wi-Fi Radar{% endblock %}
+{% block page_sub %}Saved profiles, passwords and connection control on this computer{% endblock %}
+
+{% block extra_head %}
+<link href="{% static 'css/wifi.css' %}" rel="stylesheet">
+<link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="wifi-premium">
+
+  <div class="row g-3 mb-3 wifi-stats">
+    <div class="col-6 col-xl-3">
+      <div class="stat-card glass glow-green">
+        <div class="stat-icon"><i class="fa-solid fa-book-bookmark"></i></div>
+        <div class="stat-body">
+          <span class="stat-value" id="ws-saved">—</span>
+          <span class="stat-label">Saved profiles</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="stat-card glass glow-cyan">
+        <div class="stat-icon"><i class="fa-solid fa-key"></i></div>
+        <div class="stat-body">
+          <span class="stat-value" id="ws-with-key">—</span>
+          <span class="stat-label">With saved key</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="stat-card glass">
+        <div class="stat-icon"><i class="fa-solid fa-link"></i></div>
+        <div class="stat-body">
+          <span class="stat-value text-truncate" id="ws-connected">—</span>
+          <span class="stat-label">Connected</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="stat-card glass">
+        <div class="stat-icon"><i class="fa-solid fa-signal"></i></div>
+        <div class="stat-body">
+          <span class="stat-value" id="ws-nearby">—</span>
+          <span class="stat-label">Nearby detected</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-7">
+      <div class="panel glass radar-panel h-100">
+        <div class="panel-head flex-wrap gap-2">
+          <h5><i class="fa-solid fa-circle-radiation text-success"></i> Live radar <span id="ws-source-badge"></span></h5>
+          <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-sm btn-accent" id="ws-scan"><i class="fa-solid fa-magnifying-glass"></i> Scan Nearby</button>
+            <button class="btn btn-sm btn-ghost" id="ws-refresh"><i class="fa-solid fa-rotate"></i> Refresh Scan</button>
+            <button class="btn btn-sm btn-outline-info" id="ws-location"><i class="fa-solid fa-location-crosshairs"></i> Real Location</button>
+            <button class="btn btn-sm btn-outline-danger" id="ws-disconnect"><i class="fa-solid fa-plug-circle-xmark"></i> Disconnect</button>
+          </div>
+        </div>
+        <div class="panel-body d-flex flex-column align-items-center gap-2">
+          <div class="radar-wrap" id="wifi-radar-panel">
+            <div class="radar-sweep"></div>
+            <canvas id="wifi-radar-canvas" width="640" height="640"></canvas>
+            <div class="radar-center-info">
+              <span class="rci-count" id="radar-count">0</span>
+              <span class="rci-label">networks</span>
+            </div>
+          </div>
+          <div class="real-location-wrap" id="wifi-map-panel" hidden>
+            <div id="wifi-map"></div>
+            <div class="map-status" id="map-status"><i class="fa-solid fa-location-crosshairs"></i> Requesting GPS fix…</div>
+          </div>
+          <div class="radar-legend d-flex gap-4 flex-wrap justify-content-center">
+            <span><span class="legend-dot lg-saved"></span>Saved profile</span>
+            <span><span class="legend-dot lg-strong"></span>Strong</span>
+            <span><span class="legend-dot lg-medium"></span>Medium</span>
+            <span><span class="legend-dot lg-weak"></span>Weak</span>
+          </div>
+          <p class="radar-disclaimer" id="radar-disclaimer">Radar positions are illustrative; signal strength does not reveal real-world location or direction.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="panel glass h-100">
+        <div class="panel-head"><h5><i class="fa-solid fa-link text-success"></i> Connected network</h5></div>
+        <div class="panel-body">
+          <div id="ws-connected-box">
+            <div class="text-center text-secondary py-4">
+              <i class="fa-solid fa-wifi fa-2x mb-2"></i>
+              <p class="mb-1">Loading adapter state…</p>
+            </div>
+          </div>
+          <hr class="border-secondary">
+          <h6 class="small text-uppercase text-secondary">Access requirements</h6>
+          <ul class="access-checks">
+            <li class="{{ is_local|yesno:'ok,' }}">
+              <i class="fa-solid fa-lg"></i> Local machine request
+              <span class="small">{{ is_local|yesno:'allowed,blocked — remote traffic' }}</span>
+            </li>
+            <li class="{{ is_admin|yesno:'ok,' }}">
+              <i class="fa-solid fa-lg"></i> Administrator account
+              <span class="small">{{ is_admin|yesno:'confirmed,not granted' }}</span>
+            </li>
+            <li class="{{ reveal_enabled|yesno:'ok,' }}">
+              <i class="fa-solid fa-lg"></i> Password reveal enabled
+              <span class="small">{{ reveal_enabled|yesno:'on,off' }}</span>
+            </li>
+            <li class="{{ can_reveal|yesno:'ok,' }}">
+              <i class="fa-solid fa-lg"></i> Fresh re-authentication gate
+              <span class="small">{{ can_reveal|yesno:'armed,requires setup' }}</span>
+            </li>
+          </ul>
+          {% if not can_reveal and reveal_reason %}
+            <div class="alert alert-warning small mb-3"><i class="fa-solid fa-triangle-exclamation"></i> {{ reveal_reason }}</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel glass mt-3">
+    <div class="panel-head flex-wrap gap-2">
+      <h5><i class="fa-solid fa-key text-success"></i> Saved Wi-Fi profiles <span class="badge text-bg-success" id="ws-saved-count">0</span></h5>
+      <span class="small text-secondary">Passwords are shown only after re-authentication, are never stored, and auto-mask.</span>
+    </div>
+    <div class="panel-body">
+      <div class="profile-grid" id="ws-profiles">
+        <div class="text-center text-secondary py-4 col-12">Loading saved profiles…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-xl-7">
+      <div class="panel glass h-100">
+        <div class="panel-head"><h5><i class="fa-solid fa-tower-broadcast text-info"></i> Nearby networks &amp; saved status</h5></div>
+        <div class="panel-body p-0">
+          <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 wifi-table">
+              <thead><tr><th>SSID</th><th>Signal</th><th>Security</th><th>Saved?</th><th class="text-end">Action</th></tr></thead>
+              <tbody id="ws-nearby-rows">
+                <tr><td colspan="5" class="text-center text-secondary py-4">Scanning…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-5">
+      <div class="panel glass h-100">
+        <div class="panel-head"><h5><i class="fa-solid fa-clipboard-list text-warning"></i> Password access audit</h5></div>
+        <div class="panel-body p-0">
+          <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 wifi-table">
+              <thead><tr><th>Time</th><th>Profile</th><th>Outcome</th></tr></thead>
+              <tbody>
+                {% for log in password_logs %}
+                  <tr>
+                    <td class="text-secondary small">{{ log.timestamp|date:"H:i:s" }}</td>
+                    <td class="small">{{ log.profile_name|default:"—" }}</td>
+                    <td>
+                      <span class="badge
+                        {% if log.status == 'granted' %}text-bg-success
+                        {% elif log.status == 'no_key' %}text-bg-warning
+                        {% elif log.status == 'denied' %}text-bg-danger
+                        {% else %}text-bg-secondary{% endif %}">{{ log.get_status_display }}</span>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="3" class="text-center text-secondary py-4">No password access recorded yet.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{# Re-authentication modal (required before any reveal) #}
+<div class="modal-backdrop-custom" id="reauth-modal" hidden>
+  <div class="modal-card glass">
+    <div class="modal-card-head">
+      <h5><i class="fa-solid fa-shield-halved text-success"></i> <span id="ra-title">Confirm it is you</span></h5>
+      <button class="btn-close-custom" id="ra-close">&times;</button>
+    </div>
+    <div class="modal-card-body">
+      <p class="small text-secondary mb-2">
+        Re-enter your account password to unlock a saved Wi-Fi password.
+        The window stays open for <b id="ra-window">{{ reauth_seconds }}</b> seconds and every reveal is audited.
+      </p>
+      <label class="form-label small" for="ra-password">Account password</label>
+      <div class="input-group">
+        <input type="password" class="form-control bg-transparent text-light border-light" id="ra-password"
+               autocomplete="current-password" placeholder="Your password">
+        <button class="btn btn-outline-light" id="ra-reveal" type="button" title="Show / hide">
+          <i class="fa-solid fa-eye"></i>
+        </button>
+      </div>
+      <div id="ra-result" class="mt-2 small"></div>
+    </div>
+    <div class="modal-card-foot">
+      <button class="btn btn-ghost" id="ra-cancel">Cancel</button>
+      <button class="btn btn-accent" id="ra-submit"><i class="fa-solid fa-lock"></i> Authenticate</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/wifi.js' %}"></script>
+{% endblock %}

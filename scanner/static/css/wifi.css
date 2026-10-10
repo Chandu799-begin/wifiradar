@@ -1,0 +1,331 @@
+/* ==========================================================================
+   Wi-Fi Radar Pro — Premium Saved Wi-Fi dashboard
+   Dark navy backdrop, neon-green radar, glassmorphism cards.
+   ========================================================================== */
+
+.wifi-premium {
+  --wifi-accent: #3dff9a;
+  --wifi-cyan: #41e8ff;
+  position: relative;
+  min-height: 60vh;
+}
+
+/* ---------- backdrop ---------------------------------------------------- */
+
+.wifi-premium::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(1200px 700px at 20% 0%, rgba(20, 60, 120, 0.35), transparent 55%),
+    radial-gradient(900px 700px at 100% 100%, rgba(61, 255, 154, 0.16), transparent 55%),
+    linear-gradient(180deg, #030812 0%, #060d20 40%, #030711 100%);
+}
+html[data-bs-theme="light"] .wifi-premium::before {
+  background:
+    radial-gradient(1200px 700px at 20% 0%, rgba(65, 180, 255, 0.22), transparent 55%),
+    radial-gradient(900px 700px at 100% 100%, rgba(61, 200, 140, 0.18), transparent 55%),
+    linear-gradient(180deg, #eef3fb 0%, #e7eefc 100%);
+}
+
+/* ---------- radar panel -------------------------------------------------- */
+
+.radar-panel {
+  background:
+    radial-gradient(520px 520px at 50% 50%, rgba(8, 30, 50, 0.9), rgba(3, 9, 22, 0.95)),
+    var(--glass);
+}
+
+.radar-wrap {
+  position: relative;
+  width: min(520px, 100%);
+  aspect-ratio: 1 / 1;
+}
+.radar-wrap canvas { width: 100%; height: 100%; display: block; cursor: crosshair; }
+
+/* Animated scanning circles (CSS layer behind the canvas) */
+.radar-wrap::before,
+.radar-wrap::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  border: 1px solid rgba(61, 255, 154, 0.25);
+  animation: scan-ring 3.2s ease-out infinite;
+}
+.radar-wrap::before { width: 55%; height: 55%; }
+.radar-wrap::after { width: 80%; height: 80%; animation-delay: 1.6s; }
+
+/* Rotating conic sweep (behind canvas content) */
+.radar-wrap .radar-sweep {
+  position: absolute;
+  inset: 5%;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg,
+    rgba(61, 255, 154, 0.18) 0deg,
+    rgba(61, 255, 154, 0.05) 55deg,
+    transparent 75deg);
+  animation: radar-sweep 3.4s linear infinite;
+  pointer-events: none;
+}
+
+/* ---------- real-location map mode --------------------------------------- */
+
+.real-location-wrap {
+  position: relative;
+  width: min(640px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+.real-location-wrap[hidden] { display: none; }
+#wifi-map {
+  height: min(520px, 60vh);
+  border-radius: 16px;
+  border: 1px solid rgba(61, 255, 154, 0.25);
+  box-shadow: 0 0 26px rgba(61, 255, 154, 0.12);
+  overflow: hidden;
+}
+#wifi-map.leaflet-container {
+  background: #0b1322;
+  font-family: "Segoe UI", Inter, system-ui, sans-serif;
+}
+.map-status {
+  font-size: .78rem;
+  color: var(--neon-cyan);
+  background: rgba(65, 232, 255, 0.07);
+  border: 1px solid rgba(65, 232, 255, 0.3);
+  border-radius: 999px;
+  padding: 7px 14px;
+  text-align: center;
+}
+.map-status.error { color: var(--neon-red); border-color: rgba(255, 93, 115, 0.45); background: rgba(255, 93, 115, 0.08); }
+.map-status.ok { color: var(--neon-green); border-color: rgba(61, 255, 154, 0.45); background: rgba(61, 255, 154, 0.08); }
+
+.leaflet-tooltip.wifi-tip {
+  background: rgba(7, 12, 26, 0.94);
+  color: #dbe7ff;
+  border: 1px solid rgba(65, 232, 255, 0.4);
+  border-radius: 10px;
+  font-size: .74rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+.leaflet-tooltip.wifi-tip::before { border-top-color: rgba(65, 232, 255, 0.4); }
+.wifi-tip strong { color: var(--neon-green); }
+
+html[data-bs-theme="light"] #wifi-map.leaflet-container { background: #e8eef8; }
+
+html[data-bs-theme="light"] .radar-wrap::before,
+html[data-bs-theme="light"] .radar-wrap::after { border-color: rgba(20, 130, 90, 0.35); }
+html[data-bs-theme="light"] .radar-wrap .radar-sweep {
+  background: conic-gradient(from 0deg,
+    rgba(30, 150, 110, 0.22) 0deg,
+    rgba(30, 150, 110, 0.06) 55deg,
+    transparent 75deg);
+}
+
+.radar-legend { font-size: .8rem; color: var(--text-dim); }
+.radar-legend .legend-dot { width: 9px; height: 9px; }
+.lg-saved { background: var(--neon-cyan); box-shadow: 0 0 8px var(--neon-cyan); }
+
+.radar-disclaimer {
+  font-size: .7rem;
+  color: var(--text-dim);
+  text-align: center;
+  margin: 0;
+  max-width: 460px;
+}
+
+/* ---------- access checks ------------------------------------------------ */
+
+.access-checks {
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.access-checks li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .85rem;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(127, 146, 181, 0.14);
+}
+.access-checks li i { width: 18px; text-align: center; }
+.access-checks li .small { margin-left: auto; color: var(--text-dim); font-size: .72rem; }
+.access-checks li.ok { border-color: rgba(61, 255, 154, 0.35); }
+.access-checks li.ok i { color: var(--neon-green); }
+.access-checks li:not(.ok) i { color: var(--neon-red); }
+html[data-bs-theme="light"] .access-checks li:not(.ok) i { color: #d6455f; }
+.access-checks li.ok .small { color: var(--neon-green); }
+html[data-bs-theme="light"] .access-checks li.ok .small { color: #0c9a5d; }
+
+/* ---------- saved profile cards ------------------------------------------ */
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 14px;
+}
+
+.wifi-profile-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 16px;
+  background: linear-gradient(165deg, rgba(14, 24, 48, 0.72), rgba(7, 12, 26, 0.82));
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-glow);
+  overflow: hidden;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  animation: rowEnter .4s ease both;
+}
+.wifi-profile-card:hover { transform: translateY(-3px); }
+.wifi-profile-card.has-key { border-color: rgba(61, 255, 154, 0.4); }
+.wifi-profile-card.connected {
+  box-shadow: 0 0 26px rgba(61, 255, 154, 0.22);
+  border-color: rgba(61, 255, 154, 0.6);
+}
+html[data-bs-theme="light"] .wifi-profile-card {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.wifi-profile-card .wpc-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.wifi-profile-card .wpc-ssid {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  font-size: .98rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wifi-profile-card .wpc-ssid i { color: var(--neon-green); margin-right: 6px; }
+.wifi-profile-card .wpc-meta { font-size: .72rem; color: var(--text-dim); }
+.wifi-profile-card .wpc-badges { display: flex; flex-wrap: wrap; gap: 5px; }
+
+/* security badges */
+.sec-badge {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(127, 146, 181, 0.4);
+  color: var(--text-dim);
+}
+.sec-badge.wpa3 { color: var(--neon-green); border-color: rgba(61, 255, 154, 0.5); background: rgba(61, 255, 154, 0.08); }
+.sec-badge.wpa2 { color: var(--neon-cyan); border-color: rgba(65, 232, 255, 0.5); background: rgba(65, 232, 255, 0.08); }
+.sec-badge.wpa, .sec-badge.enterprise { color: var(--neon-yellow); border-color: rgba(255, 209, 102, 0.5); background: rgba(255, 209, 102, 0.08); }
+.sec-badge.open { color: var(--text-dim); border-color: rgba(127, 146, 181, 0.4); }
+.sec-badge.has-key { color: var(--neon-green); }
+.sec-badge.no-key { color: var(--neon-red); border-color: rgba(255, 93, 115, 0.5); }
+
+/* password reveal control */
+.wifi-password {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+.wifi-password .pw-mask,
+.wifi-password .pw-value {
+  flex: 1;
+  min-width: 0;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: .85rem;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(127, 146, 181, 0.25);
+  color: var(--neon-green);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-bs-theme="light"] .wifi-password .pw-mask,
+html[data-bs-theme="light"] .wifi-password .pw-value { background: rgba(10, 30, 60, 0.06); }
+.wifi-password .pw-mask { letter-spacing: 3px; color: var(--text-dim); }
+.wifi-password .pw-mask.revealed { letter-spacing: 0; color: var(--neon-green); text-shadow: 0 0 8px rgba(61, 255, 154, 0.4); }
+
+.pw-actions { display: flex; gap: 6px; }
+.pw-actions .btn {
+  width: 38px; height: 38px;
+  display: grid; place-items: center;
+  padding: 0; font-size: .95rem;
+  border-radius: 10px;
+}
+.wpc-foot { display: flex; gap: 8px; }
+.wpc-foot .btn { flex: 1; }
+
+.wifi-stealth-note {
+  font-size: .68rem;
+  color: var(--text-dim);
+  text-align: center;
+  margin-top: 10px;
+}
+
+/* profile skeleton */
+.wifi-profile-card.skeleton-card { min-height: 190px; }
+.skeleton-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, rgba(255,255,255,.04) 30%, rgba(255,255,255,.10) 50%, rgba(255,255,255,.04) 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+
+/* ---------- nearby table extras ------------------------------------------ */
+
+.saved-tick { color: var(--neon-cyan); }
+.saved-tick .fa-solid { color: var(--neon-cyan); margin-right: 4px; }
+.net-note { font-size: .72rem; color: var(--text-dim); }
+
+/* ---------- disconnected / empty states ---------------------------------- */
+
+.ws-actions-hint {
+  display: none;
+  font-size: .72rem;
+  color: var(--neon-yellow);
+}
+.ws-actions-hint.show { display: block; }
+
+/* ---------- animations ---------------------------------------------------- */
+
+@keyframes scan-ring {
+  0%   { transform: translate(-50%, -50%) scale(.6); opacity: .9; }
+  70%  { opacity: .2; }
+  100% { transform: translate(-50%, -50%) scale(1.15); opacity: 0; }
+}
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ---------- responsive ---------------------------------------------------- */
+
+@media (max-width: 575.98px) {
+  .profile-grid { grid-template-columns: 1fr; }
+  .wifi-stats .stat-value { font-size: 1.1rem; }
+  .radar-legend { gap: 10px !important; font-size: .7rem; }
+}

@@ -1,0 +1,75 @@
+{% extends 'scanner/base.html' %}
+{% load static %}
+{% block title %}Analytics · Wi-Fi Radar Pro{% endblock %}
+{% block page_title %}Signal Strength Analytics{% endblock %}
+{% block page_sub %}Trends across recent scans{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+  <div class="col-md-3 col-6">
+    <div class="stat-card glass glow-cyan">
+      <div class="stat-icon"><i class="fa-solid fa-wifi"></i></div>
+      <div class="stat-body"><span class="stat-value">{{ stats.total_networks }}</span><span class="stat-label">Networks now</span></div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="stat-card glass glow-green">
+      <div class="stat-icon"><i class="fa-solid fa-signal"></i></div>
+      <div class="stat-body"><span class="stat-value">{{ stats.strongest }}%</span><span class="stat-label">Strongest seen</span></div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="stat-card glass">
+      <div class="stat-icon"><i class="fa-solid fa-chart-simple"></i></div>
+      <div class="stat-body"><span class="stat-value">{{ stats.strong_count }}/{{ stats.medium_count }}/{{ stats.weak_count }}</span><span class="stat-label">Strong/Med/Weak</span></div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="stat-card glass">
+      <div class="stat-icon"><i class="fa-solid fa-database"></i></div>
+      <div class="stat-body"><span class="stat-value">{{ history|length }}</span><span class="stat-label">Scans stored</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="panel glass h-100">
+      <div class="panel-head">
+        <h5><i class="fa-solid fa-chart-line text-success"></i> Strongest signal trend</h5>
+      </div>
+      <div class="panel-body">
+        <div class="chart-box"><canvas id="chart-strongest"></canvas></div>
+        <div class="skeleton" id="sk-strongest"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="panel glass h-100">
+      <div class="panel-head">
+        <h5><i class="fa-solid fa-chart-column text-info"></i> Networks per scan</h5>
+      </div>
+      <div class="panel-body">
+        <div class="chart-box"><canvas id="chart-totals"></canvas></div>
+        <div class="skeleton" id="sk-totals"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel glass mt-3">
+  <div class="panel-head">
+    <h5><i class="fa-solid fa-chart-pie text-warning"></i> Current signal distribution</h5>
+  </div>
+  <div class="panel-body">
+    <div class="chart-box chart-box-pie"><canvas id="chart-distribution"></canvas></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.CHART_DATA = {{ chart|safe }};
+</script>
+<script src="{% static 'js/analytics.js' %}"></script>
+{% endblock %}

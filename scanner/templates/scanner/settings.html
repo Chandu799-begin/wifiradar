@@ -1,0 +1,101 @@
+{% extends 'scanner/base.html' %}
+{% load static %}
+{% block title %}Settings · Wi-Fi Radar Pro{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block page_sub %}Refresh, theme, demo mode and local agent{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="panel glass h-100">
+      <div class="panel-head"><h5><i class="fa-solid fa-sliders text-info"></i> Dashboard preferences</h5></div>
+      <div class="panel-body">
+        <form method="post" action="{% url 'update_settings' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label" for="refresh_seconds">Auto-refresh interval (seconds)</label>
+            <input type="range" class="form-range" min="1" max="60" step="1" value="{{ refresh_seconds }}"
+                   id="refresh_seconds" name="refresh_seconds" oninput="document.getElementById('refresh-val').textContent=this.value + 's'">
+            <div class="small text-secondary">Every <b id="refresh-val">{{ refresh_seconds }}s</b> — lower values poll the OS more often.</div>
+          </div>
+
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" name="demo_mode" id="demo_mode"
+                   {% if demo_mode %}checked{% endif %}>
+            <label class="form-check-label" for="demo_mode">Demo mode (simulated networks)</label>
+            <div class="small text-secondary">Use mock Wi-Fi data instead of the local adapter.</div>
+          </div>
+
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" name="dark_mode" id="dark_mode" checked>
+            <label class="form-check-label" for="dark_mode">Dark theme (default)</label>
+          </div>
+
+          <button class="btn btn-accent" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save settings</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel glass h-100">
+      <div class="panel-head"><h5><i class="fa-solid fa-robot text-success"></i> Local connection agent</h5></div>
+      <div class="panel-body">
+        <dl class="row spec-list">
+          <dt class="col-sm-4">Status</dt>
+          <dd class="col-sm-8" id="agent-status-text">checking…</dd>
+          <dt class="col-sm-4">Endpoint</dt>
+          <dd class="col-sm-8"><code>http://127.0.0.1:8765</code></dd>
+          <dt class="col-sm-4">Platform</dt>
+          <dd class="col-sm-8">{{ agent.platform|default:"—" }}</dd>
+        </dl>
+        <div class="mt-3">
+          <button class="btn btn-sm btn-outline-light" id="agent-check"><i class="fa-solid fa-arrows-rotate"></i> Re-check</button>
+        </div>
+        <div class="code-block">
+<pre class="mb-0"># start the agent on this computer
+python local_agent/agent.py --port 8765 --secret "your-shared-secret"</pre>
+        </div>
+        <div class="alert alert-warning small mt-3 mb-0">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          Set the same secret in <code>config/settings.py → WIFI_LOCAL_AGENT_SHARED_SECRET</code>.
+          The agent only listens on localhost and refuses non-local binds.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel glass mt-3">
+  <div class="panel-head"><h5><i class="fa-solid fa-user-shield text-warning"></i> Account &amp; authorisation</h5></div>
+  <div class="panel-body">
+    {% if user.is_authenticated %}
+      <p class="mb-1">Signed in as <b>{{ user.username }}</b>
+        {% if user.is_staff %}<span class="badge text-bg-success">authorised for Wi-Fi control</span>
+        {% elif perms.scanner.control_wifi %}<span class="badge text-bg-success">authorised for Wi-Fi control</span>
+        {% else %}<span class="badge text-bg-secondary">view only</span>{% endif %}
+      </p>
+      <p class="small text-secondary mb-0">Staff accounts (or users granted the <code>scanner.control_wifi</code> permission) may connect or disconnect networks.</p>
+    {% else %}
+      <p class="mb-2 small text-secondary">Not logged in — you can browse the dashboard, but connecting requires an authorised local account.</p>
+      <a href="{% url 'login' %}" class="btn btn-sm btn-accent"><i class="fa-solid fa-right-to-bracket"></i> Log in</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="panel glass mt-3">
+  <div class="panel-head"><h5><i class="fa-solid fa-book text-info"></i> Browser &amp; OS limitations</h5></div>
+  <div class="panel-body small text-secondary">
+    <ul class="mb-0">
+      <li>Browsers cannot scan Wi-Fi themselves — all scanning happens on the machine running Django.</li>
+      <li>A hosted website cannot control a visitor's adapter; the local agent is required for connect/disconnect.</li>
+      <li>Signal strength does not encode physical distance or direction — radar placement is illustrative.</li>
+      <li>Windows may require the WLAN AutoConfig service; Linux requires NetworkManager (<code>nmcli</code>).</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/settings.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'scanner/base.html' %}
+{% load static %}
+{% block title %}Login · Wi-Fi Radar Pro{% endblock %}
+{% block page_title %}Login{% endblock %}
+{% block page_sub %}Authorised local accounts can manage connections{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5 col-lg-4">
+    <div class="panel glass auth-card">
+      <div class="panel-head"><h5><i class="fa-solid fa-right-to-bracket text-success"></i> Sign in</h5></div>
+      <div class="panel-body">
+        {% if form.errors %}
+          <div class="alert alert-danger py-2 small">
+            Invalid username or password. Contact your local administrator to create an account.
+          </div>
+        {% endif %}
+        <form method="post" action="{% url 'login' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label small" for="id_username">Username</label>
+            <input type="text" name="username" id="id_username" class="form-control bg-transparent text-light border-light"
+                   autofocus required autocomplete="username">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small" for="id_password">Password</label>
+            <input type="password" name="password" id="id_password" class="form-control bg-transparent text-light border-light"
+                   required autocomplete="current-password">
+          </div>
+          <input type="hidden" name="next" value="{{ next|default:'/' }}">
+          <button class="btn btn-accent w-100" type="submit"><i class="fa-solid fa-lock"></i> Log in</button>
+        </form>
+        <p class="small text-secondary mt-3 mb-0">
+          <i class="fa-solid fa-circle-info"></i>
+          Create the first account with <code>python manage.py createsuperuser</code>.
+          Only local, authorised accounts may connect or disconnect Wi-Fi.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

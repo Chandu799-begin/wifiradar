@@ -1,0 +1,72 @@
+{% extends 'scanner/base.html' %}
+{% load static %}
+{% block title %}Live Radar · Wi-Fi Radar Pro{% endblock %}
+{% block page_title %}Live Wi-Fi Radar{% endblock %}
+{% block page_sub %}Illustrative sweep — position ≠ real-world location{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="panel glass radar-panel">
+      <div class="panel-head">
+        <h5><i class="fa-solid fa-circle-radiation text-success"></i> Radar sweep</h5>
+        <div class="d-flex gap-2 align-items-center small">
+          <span class="legend-dot lg-strong"></span>Strong
+          <span class="legend-dot lg-medium"></span>Medium
+          <span class="legend-dot lg-weak"></span>Weak
+        </div>
+      </div>
+      <div class="panel-body d-flex justify-content-center position-relative">
+        <div id="main-radar" class="radar-wrap">
+          <canvas id="main-radar-canvas" width="620" height="620"></canvas>
+        </div>
+        <div class="radar-center-info" id="radar-info">
+          <span class="rci-count" id="rci-count">0</span>
+          <span class="rci-label">networks in range</span>
+        </div>
+      </div>
+      <div class="panel-foot small text-secondary">
+        <i class="fa-solid fa-circle-info"></i>
+        Blips are placed using estimated signal strength only. Wi-Fi RSSI cannot reveal
+        distance or direction — this display is illustrative, not a real-world coordinate map.
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="panel glass">
+      <div class="panel-head">
+        <h5><i class="fa-solid fa-satellite-dish text-info"></i> Detected</h5>
+        <span class="badge text-bg-success" id="radar-count-badge">0</span>
+      </div>
+      <div class="panel-body p-0">
+        <ul class="blip-list" id="blip-list">
+          <li class="blip-empty text-secondary small p-3">Scanning…</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="panel glass mt-3" id="detail-panel">
+      <div class="panel-head"><h5><i class="fa-solid fa-circle-info text-warning"></i> Network details</h5></div>
+      <div class="panel-body" id="detail-body">
+        <p class="text-secondary small mb-0">Select a blip or a network from the list.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel glass mt-3">
+  <div class="panel-head">
+    <h5><i class="fa-solid fa-tower-broadcast text-success"></i> Live feed</h5>
+    <span class="small text-secondary" id="feed-time">—</span>
+  </div>
+  <div class="panel-body">
+    <div class="feed" id="scan-feed"><div class="text-secondary small">Waiting for first scan…</div></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/radar.js' %}"></script>
+<script src="{% static 'js/radar-page.js' %}"></script>
+{% endblock %}

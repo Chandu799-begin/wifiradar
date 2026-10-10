@@ -1,0 +1,52 @@
+{% extends 'scanner/base.html' %}
+{% load static %}
+{% block title %}Scan History · Wi-Fi Radar Pro{% endblock %}
+{% block page_title %}Wi-Fi Scan History{% endblock %}
+{% block page_sub %}Aggregates only — no passwords are ever recorded{% endblock %}
+
+{% block content %}
+<div class="panel glass">
+  <div class="panel-head flex-wrap gap-2">
+    <h5><i class="fa-solid fa-clock-rotate-left text-info"></i> Recent scans</h5>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-accent" id="history-refresh"><i class="fa-solid fa-rotate"></i> Refresh</button>
+      <a href="{% url 'export_history' %}" class="btn btn-sm btn-outline-success"><i class="fa-solid fa-file-csv"></i> Export CSV</a>
+    </div>
+  </div>
+  <div class="panel-body p-0">
+    <div class="table-responsive">
+      <table class="table table-dark table-hover align-middle mb-0 wifi-table">
+        <thead>
+          <tr>
+            <th>Scan time</th>
+            <th>Networks</th>
+            <th>Strongest</th>
+            <th>Weakest</th>
+            <th class="d-none d-md-table-cell">Connected SSID</th>
+            <th>Source</th>
+          </tr>
+        </thead>
+        <tbody id="history-rows">
+          {% for item in history %}
+            <tr>
+              <td class="text-secondary">{{ item.scan_time|date:"Y-m-d H:i:s" }}</td>
+              <td>{{ item.total_networks }}</td>
+              <td><span class="signal-chip s-strong">{{ item.strongest_signal }}%</span></td>
+              <td><span class="signal-chip s-weak">{{ item.weakest_signal }}%</span></td>
+              <td class="d-none d-md-table-cell">{{ item.connected_ssid|default:"—" }}</td>
+              <td><span class="badge text-bg-{% if item.source == 'demo' %}secondary{% else %}info{% endif %}">{{ item.source }}</span></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="text-center text-secondary py-4">No scans recorded yet. Open the radar page to run one.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="panel-foot small text-secondary">Showing the latest {{ history|length }} scans (max 200).</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/history.js' %}"></script>
+{% endblock %}

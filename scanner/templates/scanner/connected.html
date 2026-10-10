@@ -1,0 +1,101 @@
+{% extends 'scanner/base.html' %}
+{% load static %}
+{% block title %}Connected Wi-Fi · Wi-Fi Radar Pro{% endblock %}
+{% block page_title %}Connected Wi-Fi{% endblock %}
+{% block page_sub %}Current association and connection log{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="panel glass h-100">
+      <div class="panel-head"><h5><i class="fa-solid fa-link text-success"></i> Current network</h5></div>
+      <div class="panel-body">
+        {% if current %}
+          <div class="connected-hero">
+            <div class="signal-ring" style="--sig: {{ current.signal_strength }}">
+              <span>{{ current.signal_strength }}%</span>
+            </div>
+            <div>
+              <h3 class="mb-1">{{ current.ssid }}</h3>
+              <div class="small text-secondary">BSSID: <code>{{ current.bssid }}</code></div>
+              <div class="small text-secondary">Security: {{ current.security_type }}</div>
+              <div class="small text-secondary">Band/Channel: {{ current.frequency|default:"—" }} · Ch {{ current.channel|default:"—" }}</div>
+            </div>
+          </div>
+          <div class="d-flex gap-2 mt-3 flex-wrap">
+            <button class="btn btn-outline-danger" id="disconnect-btn"
+                    {% if not user.is_authenticated %}disabled title="Log in to disconnect"{% endif %}>
+              <i class="fa-solid fa-plug-circle-xmark"></i> Disconnect
+            </button>
+            <span class="small text-secondary align-self-center" id="disconnect-msg"></span>
+          </div>
+        {% else %}
+          <div class="text-center py-4">
+            <i class="fa-solid fa-wifi fa-2x text-secondary mb-3"></i>
+            <p class="text-secondary mb-0">No network reported as connected yet.</p>
+            <p class="small text-secondary">Run a scan from the radar page.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel glass h-100">
+      <div class="panel-head"><h5><i class="fa-solid fa-microchip text-info"></i> Adapter &amp; agent status</h5></div>
+      <div class="panel-body">
+        <dl class="row mb-0 spec-list">
+          <dt class="col-sm-4">Adapter</dt>
+          <dd class="col-sm-8">{{ adapter.state|default:adapter.detail|default:"Unknown" }}</dd>
+          <dt class="col-sm-4">Available</dt>
+          <dd class="col-sm-8">{% if adapter.available %}<span class="text-success">Yes</span>{% else %}<span class="text-danger">No</span>{% endif %}</dd>
+          <dt class="col-sm-4">Associated SSID</dt>
+          <dd class="col-sm-8">{{ adapter.ssid|default:"—" }}</dd>
+          <dt class="col-sm-4">Local agent</dt>
+          <dd class="col-sm-8" id="agent-state">checking…</dd>
+          <dt class="col-sm-4">Source</dt>
+          <dd class="col-sm-8">{% if demo_mode %}Demo (simulated){% else %}Live OS scan{% endif %}</dd>
+        </dl>
+        <div class="alert alert-info small mt-3 mb-0">
+          <i class="fa-solid fa-shield-halved"></i>
+          Connect/disconnect is delegated to the desktop agent running on this computer
+          (<code>python local_agent/agent.py</code>). A remote website cannot control your adapter directly.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel glass mt-3">
+  <div class="panel-head"><h5><i class="fa-solid fa-clipboard-list text-warning"></i> Connection log</h5></div>
+  <div class="panel-body p-0">
+    <div class="table-responsive">
+      <table class="table table-dark table-hover align-middle mb-0 wifi-table">
+        <thead><tr><th>Time</th><th>SSID</th><th>Status</th><th>Detail</th></tr></thead>
+        <tbody>
+          {% for log in connection_logs %}
+            <tr>
+              <td class="text-secondary">{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+              <td>{{ log.ssid|default:"—" }}</td>
+              <td>
+                <span class="badge
+                  {% if log.connection_status == 'success' %}text-bg-success
+                  {% elif log.connection_status == 'failed' %}text-bg-danger
+                  {% elif log.connection_status == 'pending_agent' %}text-bg-warning
+                  {% else %}text-bg-secondary{% endif %}">{{ log.get_connection_status_display }}</span>
+              </td>
+              <td class="small text-secondary">{{ log.detail|default:"—" }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="text-center text-secondary py-4">No connection attempts recorded.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/connected.js' %}"></script>
+{% endblock %}

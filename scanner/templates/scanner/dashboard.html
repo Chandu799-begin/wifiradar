@@ -1,0 +1,143 @@
+{% extends 'scanner/base.html' %}
+{% load static %}
+{% block title %}Dashboard · Wi-Fi Radar Pro{% endblock %}
+{% block page_title %}Home Dashboard{% endblock %}
+{% block page_sub %}Live overview of nearby Wi-Fi{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-xl-3">
+    <div class="stat-card glass glow-cyan">
+      <div class="stat-icon"><i class="fa-solid fa-wifi"></i></div>
+      <div class="stat-body">
+        <span class="stat-value" id="stat-total">—</span>
+        <span class="stat-label">Nearby networks</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card glass glow-green">
+      <div class="stat-icon"><i class="fa-solid fa-link"></i></div>
+      <div class="stat-body">
+        <span class="stat-value text-truncate" id="stat-connected" style="max-width:100%">—</span>
+        <span class="stat-label">Connected network</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card glass glow-green">
+      <div class="stat-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+      <div class="stat-body">
+        <span class="stat-value" id="stat-strongest">—</span>
+        <span class="stat-label">Strongest signal</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card glass glow-red">
+      <div class="stat-icon"><i class="fa-solid fa-arrow-trend-down"></i></div>
+      <div class="stat-body">
+        <span class="stat-value" id="stat-weakest">—</span>
+        <span class="stat-label">Weakest signal</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-6 col-xl-3">
+    <div class="stat-card glass">
+      <div class="stat-icon"><i class="fa-solid fa-shield-halved"></i></div>
+      <div class="stat-body">
+        <span class="stat-value" id="stat-secured">—</span>
+        <span class="stat-label">Secured networks</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card glass">
+      <div class="stat-icon"><i class="fa-solid fa-unlock-keyhole"></i></div>
+      <div class="stat-body">
+        <span class="stat-value" id="stat-open">—</span>
+        <span class="stat-label">Open networks</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card glass">
+      <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+      <div class="stat-body">
+        <span class="stat-value stat-value-sm" id="stat-lastscan">—</span>
+        <span class="stat-label">Last scan time</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card glass">
+      <div class="stat-icon"><i class="fa-solid fa-bullseye"></i></div>
+      <div class="stat-body">
+        <span class="stat-value"><span class="text-success" id="stat-strong-n">0</span>
+          / <span class="text-warning" id="stat-medium-n">0</span>
+          / <span class="text-danger" id="stat-weak-n">0</span></span>
+        <span class="stat-label">Strong / Medium / Weak</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="panel glass h-100">
+      <div class="panel-head">
+        <h5><i class="fa-solid fa-circle-radiation text-success"></i> Radar preview</h5>
+        <a class="btn btn-sm btn-outline-light" href="{% url 'radar' %}">Full radar</a>
+      </div>
+      <div class="panel-body d-flex justify-content-center">
+        <div id="dash-radar" class="radar-wrap radar-wrap-sm">
+          <canvas id="dash-radar-canvas" width="420" height="420"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="panel glass h-100">
+      <div class="panel-head">
+        <h5><i class="fa-solid fa-chart-line text-info"></i> Signal strength trend</h5>
+        <span class="small text-secondary">strongest per scan</span>
+      </div>
+      <div class="panel-body">
+        <div class="chart-box"><canvas id="dash-chart"></canvas></div>
+        <div class="skeleton" id="dash-chart-skeleton"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel glass mt-3">
+  <div class="panel-head">
+    <h5><i class="fa-solid fa-list-ul text-warning"></i> Top networks right now</h5>
+    <a class="btn btn-sm btn-outline-light" href="{% url 'networks' %}">View all</a>
+  </div>
+  <div class="panel-body p-0">
+    <div class="table-responsive">
+      <table class="table table-dark table-hover align-middle mb-0 wifi-table">
+        <thead>
+          <tr><th>SSID</th><th>Signal</th><th>Security</th><th>Status</th></tr>
+        </thead>
+        <tbody id="dash-top-networks">
+          <tr><td colspan="4" class="text-center text-secondary py-4">Scanning…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% if scan_error %}
+<div class="alert alert-warning mt-3"><i class="fa-solid fa-triangle-exclamation"></i> {{ scan_error }}</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/radar.js' %}"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}

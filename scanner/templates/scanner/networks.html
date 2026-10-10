@@ -1,0 +1,78 @@
+{% extends 'scanner/base.html' %}
+{% load static %}
+{% block title %}Nearby Networks · Wi-Fi Radar Pro{% endblock %}
+{% block page_title %}Nearby Wi-Fi Networks{% endblock %}
+{% block page_sub %}Search, sort and connect to authorised networks{% endblock %}
+
+{% block content %}
+<div class="panel glass">
+  <div class="panel-head flex-wrap gap-2">
+    <div class="input-group input-group-sm wifi-search" style="width:min(320px,100%)">
+      <span class="input-group-text bg-transparent border-light text-secondary"><i class="fa-solid fa-magnifying-glass"></i></span>
+      <input type="search" id="search-input" class="form-control bg-transparent text-light border-light" placeholder="Search by SSID…">
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <div class="btn-group btn-group-sm" role="group" id="signal-filter">
+        <button class="btn btn-outline-light active" data-filter="all">All</button>
+        <button class="btn btn-outline-success" data-filter="strong">Strong</button>
+        <button class="btn btn-outline-warning" data-filter="medium">Medium</button>
+        <button class="btn btn-outline-danger" data-filter="weak">Weak</button>
+      </div>
+      <select id="sort-select" class="form-select form-select-sm bg-transparent text-light border-light" style="width:auto">
+        <option value="-signal_strength">Sort: signal (high → low)</option>
+        <option value="signal_strength">Sort: signal (low → high)</option>
+        <option value="ssid">Sort: SSID A → Z</option>
+        <option value="-ssid">Sort: SSID Z → A</option>
+      </select>
+      <button class="btn btn-sm btn-accent" id="table-refresh"><i class="fa-solid fa-rotate"></i> Refresh</button>
+    </div>
+  </div>
+
+  <div class="panel-body p-0">
+    <div class="connected-strip" id="connected-strip" hidden>
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <span class="pulse-dot"></span>
+        <b id="cs-ssid">—</b>
+        <span class="small text-secondary" id="cs-meta"></span>
+        <a href="{% url 'connected' %}" class="btn btn-sm btn-outline-success ms-auto">Details</a>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-dark table-hover align-middle mb-0 wifi-table">
+        <thead>
+          <tr>
+            <th>SSID</th>
+            <th>Signal</th>
+            <th class="d-none d-md-table-cell">Security</th>
+            <th class="d-none d-lg-table-cell">Band / Channel</th>
+            <th>Status</th>
+            <th class="text-end">Action</th>
+          </tr>
+        </thead>
+        <tbody id="network-rows">
+          <tr class="skeleton-row"><td colspan="6"></td></tr>
+          <tr class="skeleton-row"><td colspan="6"></td></tr>
+          <tr class="skeleton-row"><td colspan="6"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel-foot d-flex justify-content-between align-items-center small">
+    <span id="table-count" class="text-secondary">Loading…</span>
+    <span class="text-secondary">Passwords are never stored by this site.</span>
+  </div>
+</div>
+
+<div class="alert alert-secondary small mt-3">
+  <i class="fa-solid fa-flask"></i>
+  Rows shown are live results from the server's Wi-Fi adapter.
+  If the Django server runs on another machine, enable <b>Demo mode</b> in Settings
+  to explore the interface with simulated networks.
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/networks.js' %}"></script>
+{% endblock %}
